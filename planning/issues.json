@@ -3,31 +3,36 @@
     "title": "Create the C++20 build and test scaffold",
     "milestone": "M1 — Network loop",
     "labels": ["area:build", "type:infrastructure"],
-    "body": "Establish the smallest buildable repository before server work begins.\n\nAcceptance criteria:\n- CMake builds one server executable and one test target\n- strict warnings are enabled in development\n- Debug sanitizer presets are documented\n- CI builds and runs the empty test suite\n- README contains exact local build and test commands"
+    "body": "Establish the smallest buildable repository before server work begins.\n\nAcceptance criteria:\n- CMake builds one server executable and one test target\n- strict warnings are enabled in development\n- Debug sanitizer presets are documented\n- CI builds and runs the empty test suite\n- README contains exact local build and test commands",
+    "baseline": "Local assessment on 2026-08-17: CMake builds cache_core and three assertion-based test executables, but a clean build fails while linking cache_server because server.cpp and socket.cpp are absent from its target. The current working tree has no commits or remote, generated build artifacts are untracked, protocol_test.cpp is empty, warnings apply only to cache_core, and CI is not configured. First action: make a clean configure/build/test pass before adding features."
   },
   {
     "title": "Implement a move-only file descriptor wrapper",
     "milestone": "M1 — Network loop",
     "labels": ["area:cpp", "type:feature"],
-    "body": "Build the RAII boundary used by socket ownership.\n\nAcceptance criteria:\n- destructor closes an owned descriptor\n- copy operations are deleted\n- move construction and assignment transfer ownership safely\n- get, release, reset, and invalid state are covered by tests\n- ownership invariants are documented"
+    "body": "Build the RAII boundary used by socket ownership.\n\nAcceptance criteria:\n- destructor closes an owned descriptor\n- copy operations are deleted\n- move construction and assignment transfer ownership safely\n- get, release, reset, and invalid state are covered by tests\n- ownership invariants are documented",
+    "baseline": "Local assessment on 2026-08-17: Socket already closes in its destructor, deletes copying, and implements move construction and move assignment. It exposes fd(), but release/reset behavior, invalid-state tests, and ownership documentation remain. Preserve this work rather than reimplementing it."
   },
   {
     "title": "Accept and serve one TCP client",
     "milestone": "M1 — Network loop",
     "labels": ["area:networking", "type:feature"],
-    "body": "Create the smallest observable server path.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled\n- one client can connect and receive a PONG response to a temporary minimal request\n- client and listening descriptors close cleanly\n- manual test instructions are recorded"
+    "body": "Create the smallest observable server path.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled\n- one client can connect and receive a PONG response to a temporary minimal request\n- client and listening descriptors close cleanly\n- manual test instructions are recorded",
+    "baseline": "Local assessment on 2026-08-17: Server construction already creates, configures, binds, and listens; accept4 requests nonblocking and close-on-exec. The path is not currently linkable or runnable, and handle_message refers to an undeclared _db member. Complete one end-to-end request only after the clean-build gate."
   },
   {
     "title": "Handle multiple clients with poll",
     "milestone": "M1 — Network loop",
     "labels": ["area:networking", "type:feature"],
-    "body": "Introduce the v1 event loop without advancing to epoll.\n\nAcceptance criteria:\n- multiple clients make progress without blocking one another\n- readiness and error flags are handled explicitly\n- a disconnected peer is removed safely\n- connection state has a single clear owner\n- an integration test exercises concurrent clients"
+    "body": "Introduce the v1 event loop without advancing to epoll.\n\nAcceptance criteria:\n- multiple clients make progress without blocking one another\n- readiness and error flags are handled explicitly\n- a disconnected peer is removed safely\n- connection state has a single clear owner\n- an integration test exercises concurrent clients",
+    "baseline": "Local assessment on 2026-08-17: A poll loop and per-client event mask already exist, and reverse iteration avoids invalidating later indices during erase. EOF from recv currently has only a TODO, non-EAGAIN read/write errors do not close or propagate cleanly, accept errors abort the server, and no concurrent-client integration test exists."
   },
   {
     "title": "Add per-connection input buffering and fragmented-read tests",
     "milestone": "M1 — Network loop",
     "labels": ["area:networking", "type:feature"],
-    "body": "Make read boundaries independent from request boundaries.\n\nAcceptance criteria:\n- each client owns its input buffer\n- incomplete data remains available for the next read\n- closed peers and read errors do not lose unrelated connections\n- tests split representative input at multiple byte boundaries"
+    "body": "Make read boundaries independent from request boundaries.\n\nAcceptance criteria:\n- each client owns its input buffer\n- incomplete data remains available for the next read\n- closed peers and read errors do not lose unrelated connections\n- tests split representative input at multiple byte boundaries",
+    "baseline": "Local assessment on 2026-08-17: Client already owns input and output strings and recv appends bytes. Input is never consumed after execution, the current whitespace parser cannot distinguish incomplete input from invalid input, and fragmentation tests do not exist. This should converge with the incremental RESP parser rather than add more ad-hoc parsing."
   },
   {
     "title": "Implement an incremental binary-safe RESP2 parser",
