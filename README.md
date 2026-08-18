@@ -25,6 +25,6 @@ dashboard](docs/backlog.md) for the current dependency-ordered backlog.
 
 The local working tree has early store, parser, executor, socket, and `poll`
 server code plus three passing unit-test executables. The immediate gate is
-issue #1: make a fresh build produce the server, keep generated artifacts out
-of version control, and commit the implementation. No end-to-end server claim
-is made yet.
+issue #1: make a fresh macOS build produce the server, add basic Linux CI, keep
+generated artifacts out of version control, and commit the implementation. No
+end-to-end server claim is made yet.

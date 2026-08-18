@@ -45,8 +45,11 @@ tested, and documented.
 The milestone grouping describes outcomes; implementation follows dependencies.
 The current path is:
 
-`#1 -> #2 -> #3 -> #6 -> #7 -> #4 -> #5 -> #8 -> #10 -> #9 ->
-(#11 and #12) -> #13 -> (#14 and #15) -> (#16 and #17) -> #18`
+`#1 -> #2 -> #3 -> start #14 -> #4 -> #6 -> #7 -> #5 -> #8 -> #10 ->
+#9 -> (#11 and #12) -> #13 -> finish #14 -> #15 -> (#16 and #17) -> #18`
+
+#14 is deliberately long-lived: establish the TCP harness after #3, then add
+each feature's boundary tests while that feature is implemented.
 
 See [the execution dashboard](backlog.md) for priority meanings and the current
 focus rule.

@@ -6,7 +6,7 @@
     "labels": ["area:build", "type:infrastructure", "priority:P0", "status:next"],
     "depends_on": [],
     "current_state": "A fresh configure succeeds and store_test, parser_test, and executor_test pass. cache_server fails to link because server.cpp and socket.cpp are not in the target. The local tree has no commits, generated artifacts are mixed into it, README.md is empty, warnings apply only to cache_core, and the remote repository contains planning rather than implementation.",
-    "body": "Turn the existing partial scaffold into a trustworthy starting point.\n\nAcceptance criteria:\n- a fresh out-of-tree configure and full build succeeds, including cache_server\n- ctest passes from the fresh build directory\n- current server and socket sources are compiled rather than bypassed\n- strict warnings apply consistently to project targets\n- generated build products are ignored and source, headers, tests, and build configuration are committed\n- README contains exact configure, build, test, and run commands\n\nOut of scope:\n- CI and sanitizer automation remain in #15"
+    "body": "Turn the existing partial scaffold into a trustworthy starting point.\n\nAcceptance criteria:\n- a fresh out-of-tree configure and full build succeeds, including cache_server\n- ctest passes from the fresh build directory\n- current server and socket sources are compiled rather than bypassed\n- cache_server builds on macOS locally and in Linux CI; Linux-specific APIs use a portable or conditionally compiled path\n- strict warnings apply consistently to project targets\n- generated build products are ignored and source, headers, tests, and build configuration are committed\n- a basic GitHub Actions job configures, builds, and runs CTest on Linux\n- README contains exact configure, build, test, and run commands plus the supported-platform policy\n\nOut of scope:\n- sanitizer jobs and deeper CI hardening remain in #15"
   },
   {
     "number": 2,
@@ -19,12 +19,12 @@
   },
   {
     "number": 3,
-    "title": "Complete one-client TCP request/response vertical slice",
+    "title": "Prove one-client TCP I/O with a temporary PING/PONG slice",
     "milestone": "M1 — Network loop",
     "labels": ["area:networking", "type:feature", "priority:P1"],
     "depends_on": [1, 2],
     "current_state": "Server construction creates, configures, binds, and listens, and the event loop accepts nonblocking clients. The path is not buildable or runnable; handle_message calls an undeclared _db.execute API and there is no end-to-end test or documented manual session.",
-    "body": "Create the smallest observable server path using the existing listener and client state.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled without descriptor leaks\n- one client can connect, send the temporary documented request, and receive PONG\n- peer EOF and fatal read/write errors close the client cleanly\n- the listening and client descriptors close cleanly on shutdown\n- a repeatable manual smoke test is recorded\n\nDepends on: #1 and #2"
+    "body": "Create the smallest observable server path using the existing listener and client state, without inventing a second protocol layer.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled without descriptor leaks\n- one client can connect, send one exactly documented temporary PING request, and receive PONG\n- the temporary responder is isolated, contains no general command parsing, and has an explicit removal point when #6 and #7 land\n- peer EOF and fatal read/write errors close the client cleanly\n- the listening and client descriptors close cleanly on shutdown\n- a repeatable manual smoke test is recorded\n\nDepends on: #1 and #2"
   },
   {
     "number": 4,
@@ -42,7 +42,7 @@
     "labels": ["area:networking", "type:feature", "priority:P1"],
     "depends_on": [4, 6, 7],
     "current_state": "Each Client already owns input and output strings and recv appends bytes. Input is never consumed, incomplete and invalid input cannot be distinguished, and no fragmentation test reaches the TCP boundary.",
-    "body": "Connect the incremental parser to the existing per-connection buffers so read boundaries do not define request boundaries.\n\nAcceptance criteria:\n- incomplete input remains buffered for the next read\n- exactly the consumed prefix is removed after each parsed request\n- malformed input yields a bounded error and documented connection policy\n- one connection's incomplete or invalid input does not affect another\n- tests split representative RESP requests at multiple byte boundaries\n\nDepends on: #4, #6, and #7"
+    "body": "Connect the incremental parser to the existing per-connection buffers so read boundaries do not define request boundaries.\n\nAcceptance criteria:\n- incomplete input remains buffered for the next read\n- exactly the consumed prefix is removed after each parsed request\n- maximum request-frame and per-connection input-buffer sizes are documented and enforced\n- oversized or malformed input follows a bounded, documented error/close policy\n- one connection's incomplete, oversized, or invalid input does not affect another\n- tests split representative RESP requests at multiple byte boundaries and exercise both size limits\n\nDepends on: #4, #6, and #7"
   },
   {
     "number": 6,
@@ -117,19 +117,19 @@
     "number": 14,
     "title": "Build end-to-end integration test coverage",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:test", "type:test", "priority:P2"],
+    "labels": ["area:test", "type:test", "priority:P1"],
     "depends_on": [3],
     "current_state": "Three assertion-based unit-test executables pass for Store, the whitespace parser, and executeCommand. protocol_test.cpp is empty and no test starts the server or uses the TCP boundary.",
-    "body": "Build reusable tests for the running server through its TCP boundary, extending coverage alongside features.\n\nAcceptance criteria:\n- test harness starts and stops the server deterministically\n- raw RESP requests and replies are validated\n- fragmented requests, pipelining, disconnects, concurrent clients, and slow readers are covered as their issues land\n- failures leave no orphan server process\n- integration tests run through CTest\n\nCan start after: #3"
+    "body": "Start a reusable TCP test harness immediately after the first one-client slice, then extend it alongside every networking and protocol issue. This is ongoing infrastructure, not a late testing phase.\n\nAcceptance criteria:\n- the initial harness lands immediately after #3 and starts/stops the server deterministically\n- raw requests and replies are validated; convert the temporary #3 smoke case to RESP when #6 and #7 land\n- fragmented requests, pipelining, disconnects, concurrent clients, size limits, and slow readers are added as their issues land\n- repeated connect/disconnect cycles have a documented descriptor-leak check and show no unbounded file-descriptor growth\n- failures leave no orphan server process\n- integration tests run through CTest\n\nStarts after: #3; remains open and grows through #13"
   },
   {
     "number": 15,
-    "title": "Run strict warnings, ASan, and UBSan in CI",
+    "title": "Harden CI with strict warnings, ASan, and UBSan",
     "milestone": "M3 — Production-shaped correctness",
     "labels": ["area:build", "type:infrastructure", "priority:P2"],
     "depends_on": [1, 14],
     "current_state": "Only cache_core has -Wall -Wextra -pedantic. There is no CI workflow, sanitizer configuration, or documented local sanitizer command.",
-    "body": "Make compiler and runtime checks routine after the reproducible local build exists.\n\nAcceptance criteria:\n- warning-clean builds are required for all project code\n- ASan and UBSan test jobs run in CI\n- sanitizer failures fail the workflow\n- local reproduction commands are documented\n- TSan remains deferred unless concurrency is introduced\n\nDepends on: #1; complete after the integration harness in #14 is available"
+    "body": "Extend the basic build-and-test workflow from #1 with compiler and runtime hardening once the integration harness has useful coverage.\n\nAcceptance criteria:\n- warning-clean builds remain required for all project code\n- ASan and UBSan test jobs run in CI against unit and integration tests\n- sanitizer failures fail the workflow\n- local reproduction commands are documented\n- the descriptor-leak procedure from #14 is included or linked\n- TSan remains deferred unless concurrency is introduced\n\nDepends on: basic CI from #1 and the integration harness from #14"
   },
   {
     "number": 16,
