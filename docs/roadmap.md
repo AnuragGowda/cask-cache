@@ -40,6 +40,17 @@
 `epoll` is a post-v1 comparison unless the `poll` version is already correct,
 tested, and documented.
 
+## Current execution order
+
+The milestone grouping describes outcomes; implementation follows dependencies.
+The current path is:
+
+`#1 -> #2 -> #3 -> #6 -> #7 -> #4 -> #5 -> #8 -> #10 -> #9 ->
+(#11 and #12) -> #13 -> (#14 and #15) -> (#16 and #17) -> #18`
+
+See [the execution dashboard](backlog.md) for priority meanings and the current
+focus rule.
+
 ## Decision gates
 
 ### After M1
@@ -58,4 +69,3 @@ tested, and documented.
 
 Choose the next systems direction from actual experience: networking/proxies,
 storage/caching, low-latency infrastructure, or runtimes/operating systems.
-

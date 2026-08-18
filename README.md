@@ -18,9 +18,13 @@ Lua, transactions, persistence, authentication, and TLS are not v1 goals.
 - `poll` remains the baseline until fragmented reads, pipelining, partial writes,
   disconnects, and slow clients are tested reliably.
 
-See [the roadmap](docs/roadmap.md) for scope and sequencing.
+See [the roadmap](docs/roadmap.md) for scope and the [execution
+dashboard](docs/backlog.md) for the current dependency-ordered backlog.
 
 ## Status
 
-Planning and project setup. No implementation claims yet.
-
+The local working tree has early store, parser, executor, socket, and `poll`
+server code plus three passing unit-test executables. The immediate gate is
+issue #1: make a fresh build produce the server, keep generated artifacts out
+of version control, and commit the implementation. No end-to-end server claim
+is made yet.

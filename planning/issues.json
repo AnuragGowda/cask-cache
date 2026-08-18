@@ -1,115 +1,159 @@
 [
   {
-    "title": "Create the C++20 build and test scaffold",
+    "number": 1,
+    "title": "Restore a clean, reproducible C++20 build",
     "milestone": "M1 — Network loop",
-    "labels": ["area:build", "type:infrastructure"],
-    "body": "Establish the smallest buildable repository before server work begins.\n\nAcceptance criteria:\n- CMake builds one server executable and one test target\n- strict warnings are enabled in development\n- Debug sanitizer presets are documented\n- CI builds and runs the empty test suite\n- README contains exact local build and test commands",
-    "baseline": "Local assessment on 2026-08-17: CMake builds cache_core and three assertion-based test executables, but a clean build fails while linking cache_server because server.cpp and socket.cpp are absent from its target. The current working tree has no commits or remote, generated build artifacts are untracked, protocol_test.cpp is empty, warnings apply only to cache_core, and CI is not configured. First action: make a clean configure/build/test pass before adding features."
+    "labels": ["area:build", "type:infrastructure", "priority:P0", "status:next"],
+    "depends_on": [],
+    "current_state": "A fresh configure succeeds and store_test, parser_test, and executor_test pass. cache_server fails to link because server.cpp and socket.cpp are not in the target. The local tree has no commits, generated artifacts are mixed into it, README.md is empty, warnings apply only to cache_core, and the remote repository contains planning rather than implementation.",
+    "body": "Turn the existing partial scaffold into a trustworthy starting point.\n\nAcceptance criteria:\n- a fresh out-of-tree configure and full build succeeds, including cache_server\n- ctest passes from the fresh build directory\n- current server and socket sources are compiled rather than bypassed\n- strict warnings apply consistently to project targets\n- generated build products are ignored and source, headers, tests, and build configuration are committed\n- README contains exact configure, build, test, and run commands\n\nOut of scope:\n- CI and sanitizer automation remain in #15"
   },
   {
-    "title": "Implement a move-only file descriptor wrapper",
+    "number": 2,
+    "title": "Finish and test the move-only Socket wrapper",
     "milestone": "M1 — Network loop",
-    "labels": ["area:cpp", "type:feature"],
-    "body": "Build the RAII boundary used by socket ownership.\n\nAcceptance criteria:\n- destructor closes an owned descriptor\n- copy operations are deleted\n- move construction and assignment transfer ownership safely\n- get, release, reset, and invalid state are covered by tests\n- ownership invariants are documented",
-    "baseline": "Local assessment on 2026-08-17: Socket already closes in its destructor, deletes copying, and implements move construction and move assignment. It exposes fd(), but release/reset behavior, invalid-state tests, and ownership documentation remain. Preserve this work rather than reimplementing it."
+    "labels": ["area:cpp", "type:feature", "priority:P1"],
+    "depends_on": [1],
+    "current_state": "Socket already closes its descriptor, deletes copying, transfers ownership in move construction and assignment, and exposes fd(). release/reset behavior, invalid-state tests, and ownership documentation remain.",
+    "body": "Finish the RAII boundary already used by socket ownership.\n\nAcceptance criteria:\n- destructor closes an owned descriptor exactly once\n- copy operations remain deleted\n- move construction and assignment transfer ownership safely\n- get/fd, release, reset, self-move protection, and invalid state are covered by focused tests\n- ownership invariants are documented\n\nDepends on: #1"
   },
   {
-    "title": "Accept and serve one TCP client",
+    "number": 3,
+    "title": "Complete one-client TCP request/response vertical slice",
     "milestone": "M1 — Network loop",
-    "labels": ["area:networking", "type:feature"],
-    "body": "Create the smallest observable server path.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled\n- one client can connect and receive a PONG response to a temporary minimal request\n- client and listening descriptors close cleanly\n- manual test instructions are recorded",
-    "baseline": "Local assessment on 2026-08-17: Server construction already creates, configures, binds, and listens; accept4 requests nonblocking and close-on-exec. The path is not currently linkable or runnable, and handle_message refers to an undeclared _db member. Complete one end-to-end request only after the clean-build gate."
+    "labels": ["area:networking", "type:feature", "priority:P1"],
+    "depends_on": [1, 2],
+    "current_state": "Server construction creates, configures, binds, and listens, and the event loop accepts nonblocking clients. The path is not buildable or runnable; handle_message calls an undeclared _db.execute API and there is no end-to-end test or documented manual session.",
+    "body": "Create the smallest observable server path using the existing listener and client state.\n\nAcceptance criteria:\n- socket, bind, listen, and accept failures are handled without descriptor leaks\n- one client can connect, send the temporary documented request, and receive PONG\n- peer EOF and fatal read/write errors close the client cleanly\n- the listening and client descriptors close cleanly on shutdown\n- a repeatable manual smoke test is recorded\n\nDepends on: #1 and #2"
   },
   {
-    "title": "Handle multiple clients with poll",
+    "number": 4,
+    "title": "Harden the poll loop for multiple clients and disconnects",
     "milestone": "M1 — Network loop",
-    "labels": ["area:networking", "type:feature"],
-    "body": "Introduce the v1 event loop without advancing to epoll.\n\nAcceptance criteria:\n- multiple clients make progress without blocking one another\n- readiness and error flags are handled explicitly\n- a disconnected peer is removed safely\n- connection state has a single clear owner\n- an integration test exercises concurrent clients",
-    "baseline": "Local assessment on 2026-08-17: A poll loop and per-client event mask already exist, and reverse iteration avoids invalidating later indices during erase. EOF from recv currently has only a TODO, non-EAGAIN read/write errors do not close or propagate cleanly, accept errors abort the server, and no concurrent-client integration test exists."
+    "labels": ["area:networking", "type:feature", "priority:P1"],
+    "depends_on": [3],
+    "current_state": "A poll loop and per-client event mask exist, and reverse iteration avoids invalidating later indices during erase. EOF is a TODO, non-EAGAIN read/write errors do not close or propagate, accept errors abort the server, and no concurrent-client integration test exists.",
+    "body": "Turn the existing poll skeleton into a correct v1 event loop.\n\nAcceptance criteria:\n- multiple clients make progress without blocking one another\n- POLLIN, POLLOUT, POLLERR, POLLHUP, and POLLNVAL are handled deliberately\n- transient accept/read/write errors do not abort the server\n- peer EOF and fatal I/O errors remove exactly the affected connection\n- connection state has one clear owner\n- an integration test exercises concurrent connect, request, and disconnect behavior\n\nDepends on: #3"
   },
   {
-    "title": "Add per-connection input buffering and fragmented-read tests",
-    "milestone": "M1 — Network loop",
-    "labels": ["area:networking", "type:feature"],
-    "body": "Make read boundaries independent from request boundaries.\n\nAcceptance criteria:\n- each client owns its input buffer\n- incomplete data remains available for the next read\n- closed peers and read errors do not lose unrelated connections\n- tests split representative input at multiple byte boundaries",
-    "baseline": "Local assessment on 2026-08-17: Client already owns input and output strings and recv appends bytes. Input is never consumed after execution, the current whitespace parser cannot distinguish incomplete input from invalid input, and fragmentation tests do not exist. This should converge with the incremental RESP parser rather than add more ad-hoc parsing."
+    "number": 5,
+    "title": "Integrate per-connection buffers with incremental parsing",
+    "milestone": "M2 — RESP and core commands",
+    "labels": ["area:networking", "type:feature", "priority:P1"],
+    "depends_on": [4, 6, 7],
+    "current_state": "Each Client already owns input and output strings and recv appends bytes. Input is never consumed, incomplete and invalid input cannot be distinguished, and no fragmentation test reaches the TCP boundary.",
+    "body": "Connect the incremental parser to the existing per-connection buffers so read boundaries do not define request boundaries.\n\nAcceptance criteria:\n- incomplete input remains buffered for the next read\n- exactly the consumed prefix is removed after each parsed request\n- malformed input yields a bounded error and documented connection policy\n- one connection's incomplete or invalid input does not affect another\n- tests split representative RESP requests at multiple byte boundaries\n\nDepends on: #4, #6, and #7"
   },
   {
+    "number": 6,
     "title": "Implement an incremental binary-safe RESP2 parser",
     "milestone": "M2 — RESP and core commands",
-    "labels": ["area:protocol", "type:feature"],
-    "body": "Parse the subset needed for command requests.\n\nAcceptance criteria:\n- parser reports incomplete, valid, or invalid without conflating states\n- arrays and bulk strings are supported\n- binary bulk-string content is preserved\n- multiple requests can be consumed from one buffer\n- invalid lengths and malformed frames return bounded errors\n- unit tests exercise arbitrary fragmentation"
+    "labels": ["area:protocol", "type:feature", "priority:P1"],
+    "depends_on": [1],
+    "current_state": "parseCommand is currently a whitespace tokenizer for SET, GET, and DEL. It has nominal and arity tests but only Valid/Invalid states; it is not RESP, incremental, or binary safe.",
+    "body": "Replace the whitespace prototype with the RESP2 subset needed for command requests.\n\nAcceptance criteria:\n- parser reports incomplete, valid, or invalid without conflating states\n- result reports how many input bytes were consumed\n- arrays and bulk strings are supported\n- binary bulk-string content, including spaces and NUL bytes, is preserved\n- invalid lengths and malformed frames produce bounded errors\n- unit tests exercise every byte split for representative requests\n\nDepends on: #1"
   },
   {
-    "title": "Separate command dispatch from protocol parsing",
+    "number": 7,
+    "title": "Finish the dispatch boundary and add PING/ECHO",
     "milestone": "M2 — RESP and core commands",
-    "labels": ["area:architecture", "type:feature"],
-    "body": "Keep transport, protocol, and command logic independently testable.\n\nAcceptance criteria:\n- parser produces a protocol-level command representation\n- dispatcher validates command names and arity\n- response formatting is not embedded in storage operations\n- PING and ECHO are implemented with unit tests"
+    "labels": ["area:architecture", "type:feature", "priority:P1"],
+    "depends_on": [6],
+    "current_state": "executeCommand is already separate from Store, and response strings are not embedded in storage. Command-name and arity decisions are still embedded in the whitespace parser, replies are plain text rather than RESP, and PING/ECHO are absent.",
+    "body": "Finish separating transport, protocol parsing, dispatch, response encoding, and storage.\n\nAcceptance criteria:\n- parser produces a protocol-level argument vector rather than storage-specific command types\n- dispatcher owns case-insensitive command lookup and arity validation\n- response encoding is independent from Store\n- PING and ECHO behavior is implemented with correct RESP replies\n- unknown-command and wrong-arity errors are tested\n\nDepends on: #6"
   },
   {
-    "title": "Implement SET, GET, DEL, and EXISTS",
+    "number": 8,
+    "title": "Finish RESP-safe SET/GET/DEL and add EXISTS",
     "milestone": "M2 — RESP and core commands",
-    "labels": ["area:commands", "type:feature"],
-    "body": "Add the first useful in-memory command set.\n\nAcceptance criteria:\n- keys and values are binary safe\n- missing-key behavior matches documented Redis behavior for the supported subset\n- DEL and EXISTS accept the documented arity\n- command logic has focused unit tests"
+    "labels": ["area:commands", "type:feature", "priority:P1"],
+    "depends_on": [6, 7],
+    "current_state": "Store and executeCommand already cover single-key SET, GET, and DEL with focused assertion-based tests. EXISTS, variadic DEL/EXISTS, Redis response types, and protocol-level binary safety remain.",
+    "body": "Turn the existing storage prototype into the first Redis-compatible command set.\n\nAcceptance criteria:\n- SET and GET preserve binary-safe keys and values\n- missing GET returns a RESP null bulk string\n- DEL and EXISTS support the documented Redis-compatible multi-key arity\n- successful replies use correct RESP types\n- command logic has focused unit tests for overwrite, missing keys, multiple keys, and binary content\n\nDepends on: #6 and #7"
   },
   {
+    "number": 9,
     "title": "Implement INCR and DECR with integer edge-case tests",
     "milestone": "M2 — RESP and core commands",
-    "labels": ["area:commands", "type:feature"],
-    "body": "Add integer mutation without undefined behavior.\n\nAcceptance criteria:\n- missing keys follow the documented initial-value behavior\n- invalid integer values return an error without mutation\n- overflow boundaries are tested and handled\n- successful replies use the correct RESP type"
+    "labels": ["area:commands", "type:feature", "priority:P2"],
+    "depends_on": [8],
+    "body": "Add integer mutation without undefined behavior.\n\nAcceptance criteria:\n- missing keys follow the documented initial-value behavior\n- invalid integer values return an error without mutation\n- overflow boundaries are tested and handled\n- successful replies use the correct RESP type\n\nDepends on: #8"
   },
   {
+    "number": 10,
     "title": "Verify basic redis-cli compatibility",
     "milestone": "M2 — RESP and core commands",
-    "labels": ["area:compatibility", "type:test"],
-    "body": "Use redis-cli as an external compatibility check.\n\nAcceptance criteria:\n- redis-cli connects to the configured host and port\n- all currently supported commands work interactively\n- one automated or scripted compatibility smoke test is retained\n- unsupported behavior is documented rather than implied"
+    "labels": ["area:compatibility", "type:test", "priority:P1"],
+    "depends_on": [3, 5, 7, 8],
+    "body": "Use redis-cli as an external compatibility check.\n\nAcceptance criteria:\n- redis-cli connects to the configured host and port\n- all currently supported commands work interactively\n- one automated or scripted compatibility smoke test is retained\n- unsupported behavior is documented rather than implied\n\nDepends on: #3, #5, #7, and #8"
   },
   {
+    "number": 11,
     "title": "Support pipelined requests reliably",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:networking", "type:feature"],
-    "body": "Allow multiple complete commands to arrive before replies are drained.\n\nAcceptance criteria:\n- all complete requests in an input buffer are dispatched in order\n- incomplete trailing input is retained\n- replies remain ordered\n- integration tests combine pipelining with fragmented input"
+    "labels": ["area:networking", "type:feature", "priority:P2"],
+    "depends_on": [5, 7],
+    "current_state": "The current server executes the entire accumulated input once and never consumes it, so it cannot safely distinguish or order multiple buffered requests.",
+    "body": "Allow multiple complete commands to arrive before replies are drained.\n\nAcceptance criteria:\n- all complete requests in an input buffer are dispatched in order\n- incomplete trailing input is retained\n- replies remain ordered\n- per-event work has a documented fairness policy\n- integration tests combine pipelining with fragmented input\n\nDepends on: #5 and #7"
   },
   {
+    "number": 12,
     "title": "Handle partial writes and slow clients",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:networking", "type:feature"],
-    "body": "Make output progress independent of send call boundaries.\n\nAcceptance criteria:\n- each connection owns queued output\n- partial sends retain unsent bytes\n- POLLOUT interest is enabled only when useful\n- EAGAIN is not treated as a disconnect\n- accidental unbounded buffering has a documented limit or policy\n- tests exercise a client that drains slowly"
+    "labels": ["area:networking", "type:feature", "priority:P2"],
+    "depends_on": [4],
+    "current_state": "Each client already owns an output string and enables POLLOUT. The send loop passes the full buffer size after advancing the pointer, silently continues after fatal send errors, and has no output limit or slow-reader test.",
+    "body": "Make output progress independent of send call boundaries.\n\nAcceptance criteria:\n- each connection owns queued output plus an unambiguous send offset\n- each send length is limited to the remaining unsent bytes\n- partial sends retain unsent bytes\n- POLLOUT interest is enabled only while useful\n- EAGAIN is not treated as a disconnect and fatal errors are handled\n- queued output has a documented bound or backpressure policy\n- tests exercise a client that drains slowly\n\nDepends on: #4"
   },
   {
+    "number": 13,
     "title": "Implement EXPIRE and TTL",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:storage", "type:feature"],
-    "body": "Add documented key expiration semantics.\n\nAcceptance criteria:\n- a monotonic clock is used for elapsed-time decisions\n- expiration strategy is documented\n- expired keys are not returned by supported commands\n- overwrite, delete, missing key, and TTL edge cases are tested\n- tests avoid timing flakiness where practical"
+    "labels": ["area:storage", "type:feature", "priority:P2"],
+    "depends_on": [8],
+    "body": "Add documented key expiration semantics.\n\nAcceptance criteria:\n- a monotonic clock is used for elapsed-time decisions\n- expiration strategy is documented\n- expired keys are not returned by supported commands\n- overwrite, delete, missing key, and TTL edge cases are tested\n- tests avoid timing flakiness where practical\n\nDepends on: #8"
   },
   {
+    "number": 14,
     "title": "Build end-to-end integration test coverage",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:test", "type:test"],
-    "body": "Test the running server through its TCP boundary.\n\nAcceptance criteria:\n- test harness starts and stops the server deterministically\n- raw RESP requests and replies are validated\n- fragmented requests, pipelining, disconnects, and concurrent clients are covered\n- failures leave no orphan server process"
+    "labels": ["area:test", "type:test", "priority:P2"],
+    "depends_on": [3],
+    "current_state": "Three assertion-based unit-test executables pass for Store, the whitespace parser, and executeCommand. protocol_test.cpp is empty and no test starts the server or uses the TCP boundary.",
+    "body": "Build reusable tests for the running server through its TCP boundary, extending coverage alongside features.\n\nAcceptance criteria:\n- test harness starts and stops the server deterministically\n- raw RESP requests and replies are validated\n- fragmented requests, pipelining, disconnects, concurrent clients, and slow readers are covered as their issues land\n- failures leave no orphan server process\n- integration tests run through CTest\n\nCan start after: #3"
   },
   {
+    "number": 15,
     "title": "Run strict warnings, ASan, and UBSan in CI",
     "milestone": "M3 — Production-shaped correctness",
-    "labels": ["area:build", "type:infrastructure"],
-    "body": "Make memory and undefined-behavior checks routine.\n\nAcceptance criteria:\n- warning-clean build is required\n- ASan and UBSan test jobs run in CI\n- sanitizer failures fail the workflow\n- local reproduction commands are documented\n- TSan is deferred unless concurrency is introduced"
+    "labels": ["area:build", "type:infrastructure", "priority:P2"],
+    "depends_on": [1, 14],
+    "current_state": "Only cache_core has -Wall -Wextra -pedantic. There is no CI workflow, sanitizer configuration, or documented local sanitizer command.",
+    "body": "Make compiler and runtime checks routine after the reproducible local build exists.\n\nAcceptance criteria:\n- warning-clean builds are required for all project code\n- ASan and UBSan test jobs run in CI\n- sanitizer failures fail the workflow\n- local reproduction commands are documented\n- TSan remains deferred unless concurrency is introduced\n\nDepends on: #1; complete after the integration harness in #14 is available"
   },
   {
+    "number": 16,
     "title": "Create a reproducible baseline benchmark",
     "milestone": "v1.0 — Resume ready",
-    "labels": ["area:performance", "type:benchmark"],
-    "body": "Measure the poll implementation before optimizing it.\n\nAcceptance criteria:\n- workload, client count, payload, hardware, and build mode are recorded\n- warmup and multiple measured runs are used\n- throughput plus median and tail latency are reported when the tool supports them\n- limitations and measurement noise are stated\n- no superiority claim is made without a valid comparison"
+    "labels": ["area:performance", "type:benchmark", "priority:P3"],
+    "depends_on": [10, 11, 12, 13, 14, 15],
+    "body": "Measure the stable poll implementation before optimizing it.\n\nAcceptance criteria:\n- workload, client count, payload, hardware, and build mode are recorded\n- warmup and multiple measured runs are used\n- throughput plus median and tail latency are reported when the tool supports them\n- limitations and measurement noise are stated\n- no superiority claim is made without a valid comparison\n\nEntry gate: core compatibility, I/O correctness, expiration, integration tests, and sanitizer CI are complete"
   },
   {
+    "number": 17,
     "title": "Document architecture, commands, and known limitations",
     "milestone": "v1.0 — Resume ready",
-    "labels": ["area:docs", "type:documentation"],
-    "body": "Make the project understandable and interview-ready.\n\nAcceptance criteria:\n- README has build, test, sanitizer, and run instructions\n- architecture explains ownership, event loop, parsing, storage, and expiration\n- supported-command table states exact behavior\n- example redis-cli session is included\n- benchmark method and results are linked\n- known limitations are explicit"
+    "labels": ["area:docs", "type:documentation", "priority:P3"],
+    "depends_on": [1],
+    "current_state": "The implementation-tree README is empty. The remote README and roadmap describe intended scope but not build/run steps, current architecture, supported behavior, or verified limitations.",
+    "body": "Keep user and architecture documentation current, then finish the interview-ready presentation after the benchmark.\n\nAcceptance criteria:\n- README has build, test, sanitizer, and run instructions\n- architecture explains ownership, event loop, parsing, storage, and expiration\n- supported-command table states exact behavior\n- example redis-cli session is included\n- benchmark method and results are linked\n- known limitations are explicit\n\nCan start after: #1; final completion follows #16"
   },
   {
+    "number": 18,
     "title": "Compare epoll only after the poll baseline is stable",
     "milestone": "Post-v1",
-    "labels": ["area:networking", "type:experiment"],
-    "body": "This is deliberately post-v1 and must not pull focus from correctness.\n\nEntry criteria:\n- fragmented reads, pipelining, partial writes, disconnects, and slow clients are tested\n- sanitizer CI is green\n- baseline benchmark is reproducible\n\nAcceptance criteria:\n- existing connection and parsing interfaces are preserved where practical\n- the full test suite passes against epoll\n- the same benchmark compares poll and epoll\n- results are explained without overclaiming"
+    "labels": ["area:networking", "type:experiment", "priority:P3"],
+    "depends_on": [16, 17],
+    "body": "This is deliberately post-v1 and must not pull focus from correctness.\n\nEntry criteria:\n- fragmented reads, pipelining, partial writes, disconnects, and slow clients are tested\n- sanitizer CI is green\n- baseline benchmark is reproducible\n- v1 documentation is complete\n\nAcceptance criteria:\n- existing connection and parsing interfaces are preserved where practical\n- the full test suite passes against epoll\n- the same benchmark compares poll and epoll\n- results are explained without overclaiming\n\nDepends on: #16 and #17"
   }
 ]
