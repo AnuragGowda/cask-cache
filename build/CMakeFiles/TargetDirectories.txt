@@ -1,0 +1,8 @@
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/cache_core.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/cache_server.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/store_test.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/parser_test.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/executor_test.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/test.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/edit_cache.dir
+/Users/anurag/Documents/Projects/cask-cache/build/CMakeFiles/rebuild_cache.dir

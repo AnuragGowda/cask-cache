@@ -1,0 +1,56 @@
+[
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -Wall -Wextra -pedantic -o CMakeFiles/cache_core.dir/src/store/store.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/store/store.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/store/store.cpp",
+  "output": "CMakeFiles/cache_core.dir/src/store/store.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -Wall -Wextra -pedantic -o CMakeFiles/cache_core.dir/src/parser/parser.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/parser/parser.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/parser/parser.cpp",
+  "output": "CMakeFiles/cache_core.dir/src/parser/parser.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -Wall -Wextra -pedantic -o CMakeFiles/cache_core.dir/src/executor/executor.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/executor/executor.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/executor/executor.cpp",
+  "output": "CMakeFiles/cache_core.dir/src/executor/executor.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -Wall -Wextra -pedantic -o CMakeFiles/cache_core.dir/src/server/server.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/server/server.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/server/server.cpp",
+  "output": "CMakeFiles/cache_core.dir/src/server/server.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -Wall -Wextra -pedantic -o CMakeFiles/cache_core.dir/src/server/socket.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/server/socket.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/server/socket.cpp",
+  "output": "CMakeFiles/cache_core.dir/src/server/socket.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -o CMakeFiles/cache_server.dir/src/main.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/src/main.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/src/main.cpp",
+  "output": "CMakeFiles/cache_server.dir/src/main.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -o CMakeFiles/store_test.dir/tests/store_test.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/tests/store_test.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/tests/store_test.cpp",
+  "output": "CMakeFiles/store_test.dir/tests/store_test.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -o CMakeFiles/parser_test.dir/tests/parser_test.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/tests/parser_test.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/tests/parser_test.cpp",
+  "output": "CMakeFiles/parser_test.dir/tests/parser_test.cpp.o"
+},
+{
+  "directory": "/Users/anurag/Documents/Projects/cask-cache/build",
+  "command": "/usr/bin/c++  -I/Users/anurag/Documents/Projects/cask-cache/src -std=gnu++20 -arch arm64 -o CMakeFiles/executor_test.dir/tests/executor_test.cpp.o -c /Users/anurag/Documents/Projects/cask-cache/tests/executor_test.cpp",
+  "file": "/Users/anurag/Documents/Projects/cask-cache/tests/executor_test.cpp",
+  "output": "CMakeFiles/executor_test.dir/tests/executor_test.cpp.o"
+}
+]

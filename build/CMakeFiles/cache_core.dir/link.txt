@@ -1,0 +1,2 @@
+/usr/bin/ar qc libcache_core.a CMakeFiles/cache_core.dir/src/store/store.cpp.o CMakeFiles/cache_core.dir/src/parser/parser.cpp.o CMakeFiles/cache_core.dir/src/executor/executor.cpp.o CMakeFiles/cache_core.dir/src/server/server.cpp.o CMakeFiles/cache_core.dir/src/server/socket.cpp.o
+/usr/bin/ranlib libcache_core.a
