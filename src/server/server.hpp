@@ -1,6 +1,7 @@
 #include "socket.hpp"
 #include <poll.h>
 #include <vector>
+#include <string>
 
 struct Client {
   Socket socket;

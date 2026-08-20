@@ -64,14 +64,19 @@ void Server::run() {
     // Check if existing connections ready
     for (size_t i = _clients.size(); i-- > 0;) {
       const short revents = pollfds[i + 1].revents;
-
+      bool remove_client = false;
       if (revents == 0) {
         continue;
       }
       if (revents & (POLLIN | POLLOUT)) {
-        handle_message(_clients[i], revents & POLLIN, revents & POLLOUT);
+        if (IoResult::remove == handle_message(_clients[i], revents & POLLIN, revents & POLLOUT)){
+          remove_client = true;
+        }
       }
       if (revents & (POLLERR | POLLHUP | POLLNVAL)) {
+        remove_client = true;
+      }
+      if (remove_client){
         _clients.erase(_clients.begin() + i);
       }
     }
@@ -84,6 +89,9 @@ void Server::run() {
                                reinterpret_cast<sockaddr *>(&client_addr),
                                &client_len, SOCK_NONBLOCK | SOCK_CLOEXEC)};
       if (client_fd.fd() < 0) {
+        if (errno == EINTR || errno == EWOULDBLOCK || errno == EAGAIN){
+          continue;
+        }
         throw std::runtime_error("Accept failed");
       }
       _clients.push_back(
@@ -106,16 +114,16 @@ IoResult Server::handle_message(Client &client, bool input_ready,
           continue;
         }
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
-          client.output.erase(0, bytes_written);
           break;
         }
+        return IoResult::remove;
       } else {
         bytes_written += static_cast<size_t>(ret);
       }
     }
-    if (bytes_written == client.output.size()) {
+    client.output.erase(0, bytes_written);
+    if (client.output.empty()) {
       client.events &= static_cast<short>(~POLLOUT);
-      client.output.clear();
     }
   }
 
@@ -132,6 +140,7 @@ IoResult Server::handle_message(Client &client, bool input_ready,
         if (errno == EWOULDBLOCK || errno == EAGAIN) {
           break;
         }
+        return IoResult::remove;
       }
       if (ret == 0) {
         return IoResult::remove;
@@ -144,6 +153,7 @@ IoResult Server::handle_message(Client &client, bool input_ready,
     std::string output_data = client.input;
     if (output_data.size() > 0) {
       client.output.append(output_data);
+      client.input.clear();
       client.events |= POLLOUT;
     }
   }
