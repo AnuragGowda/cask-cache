@@ -1,3 +1,3 @@
 # Cask Cache
 
-Minimal benchmarked Redis C++20 implementation, supporting following commands. WIP
+Minimal benchmarked modern C++ Redis compatible implementation, supporting following commands. WIP
