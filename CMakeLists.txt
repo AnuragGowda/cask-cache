@@ -10,7 +10,7 @@ add_library(cache_core
 
 target_include_directories(cache_core PUBLIC src)
 
-target_compile_features(cache_core PUBLIC cxx_std_20)
+target_compile_features(cache_core PUBLIC cxx_std_23)
 
 target_compile_options(cache_core PRIVATE
   -Wall

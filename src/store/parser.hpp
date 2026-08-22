@@ -1,3 +1,5 @@
+#include <cstddef>
+#include <expected>
 #include <string_view>
 #include <variant>
 
@@ -29,10 +31,25 @@ struct ParseSuccess {
     Command command;
     size_t bytes_consumed;
 };
-
 struct ParseIncomplete {};
-struct ProtocolError {};
-struct CommandError {};
 
-using ParseResult = std::variant<ParseSuccess, ParseIncomplete, ProtocolError, CommandError>;
-ParseResult parseCommand(std::string_view view);
+struct ProtocolError {
+    std::string_view message;
+};
+
+struct UnknownCommand {
+    std::string_view command;
+};
+
+struct WrongArity {
+    std::size_t expected;
+    std::size_t actual;
+};
+
+struct InvalidArgument {
+    std::size_t index;
+};
+
+using ParseError = std::variant<ParseIncomplete, ProtocolError, UnknownCommand, WrongArity, InvalidArgument>;
+
+std::expected<ParseSuccess, ParseError> parseCommand(std::string_view view);
