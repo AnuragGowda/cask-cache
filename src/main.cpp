@@ -5,7 +5,7 @@ int SERVER_PORT = 8080;
 
 int main() {
 
-  Server server{SERVER_PORT};
-  server.run();
-  return EXIT_SUCCESS;
+    Server server{SERVER_PORT};
+    server.run();
+    return EXIT_SUCCESS;
 }

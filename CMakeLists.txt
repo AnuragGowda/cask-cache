@@ -6,6 +6,9 @@ set(CMAKE_EXPORT_COMPILE_COMMANDS ON)
 add_library(cache_core
   src/server/server.cpp
   src/server/socket.cpp
+  src/protocol/parser.cpp
+  src/protocol/serializer.cpp
+  src/store/store.cpp
 )
 
 target_include_directories(cache_core PUBLIC src)

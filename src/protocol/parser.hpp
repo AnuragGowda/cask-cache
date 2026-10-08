@@ -1,3 +1,5 @@
+#pragma once
+
 #include <cstddef>
 #include <expected>
 #include <string_view>
@@ -25,7 +27,14 @@ struct TTLCommand {
     std::string_view key;
 };
 
-using Command = std::variant<PingCommand, SetCommand, GetCommand, DelCommand, IncrCommand, ExpireCommand, TTLCommand>;
+using Command = std::variant<
+    PingCommand,
+    SetCommand,
+    GetCommand,
+    DelCommand,
+    IncrCommand,
+    ExpireCommand,
+    TTLCommand>;
 
 struct ParseSuccess {
     Command command;
@@ -33,23 +42,25 @@ struct ParseSuccess {
 };
 struct ParseIncomplete {};
 
-struct ProtocolError {
-    std::string_view message;
-};
+struct ProtocolError {};
 
 struct UnknownCommand {
     std::string_view command;
 };
 
 struct WrongArity {
-    std::size_t expected;
-    std::size_t actual;
+    std::string_view command;
 };
 
 struct InvalidArgument {
     std::size_t index;
 };
 
-using ParseError = std::variant<ParseIncomplete, ProtocolError, UnknownCommand, WrongArity, InvalidArgument>;
+using ParseError = std::variant<
+    ParseIncomplete,
+    ProtocolError,
+    UnknownCommand,
+    WrongArity,
+    InvalidArgument>;
 
 std::expected<ParseSuccess, ParseError> parseCommand(std::string_view view);
